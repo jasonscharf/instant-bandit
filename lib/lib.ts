@@ -1,4 +1,6 @@
-import fetch from "node-fetch"
+import * as constants from "../lib/constants"
+
+
 import {
   ConversionOptions,
   Counts,
@@ -7,8 +9,8 @@ import {
   Variant,
 } from "./types"
 
-// TODO: make env var
-export const baseUrl = "http://localhost:3000/api"
+export const baseUrl = process.env["IB_BASE_URL" ?? constants.DEFAULT_BASE_URL]
+
 
 /**
  * Fetches ProbabilityDistribution from the server for an experiment with

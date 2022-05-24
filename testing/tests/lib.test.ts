@@ -1,11 +1,12 @@
-import { demoExperimentId } from "../components/DemoComponent"
+import { demoExperimentId } from "../../components/DemoComponent"
 import {
   fetchProbabilities,
   selectVariant,
   setSessionVariant,
   getSessionVariant,
   incrementCounts,
-} from "./lib"
+} from "../../lib/lib"
+
 
 beforeEach(() => {
   sessionStorage.clear()
@@ -14,13 +15,13 @@ beforeEach(() => {
 describe("fetchProbabilities", () => {
   // NOTE: enable when api is running
   it.skip("should gracefully handle any fetch error", async () => {
-    jest.spyOn(console, "error").mockImplementation(() => {})
+    jest.spyOn(console, "error").mockImplementation(() => { })
     const probabilities = await fetchProbabilities("DOES_NOT_EXIST", "A")
     expect(probabilities).toEqual({ A: 1.0 })
   })
 
   it("should return default when timeout", async () => {
-    jest.spyOn(console, "error").mockImplementation(() => {})
+    jest.spyOn(console, "error").mockImplementation(() => { })
     const probabilities = await fetchProbabilities(demoExperimentId, "A", 0)
     expect(probabilities).toEqual({ A: 1.0 })
   })
@@ -51,7 +52,7 @@ describe("selectVariant", () => {
   })
 
   it("should gracefully handle bad probabilities", () => {
-    jest.spyOn(console, "error").mockImplementation(() => {})
+    jest.spyOn(console, "error").mockImplementation(() => { })
     const variant = selectVariant({ A: 0.0, B: 0.0 }, "C")
     expect(variant).toEqual("C")
   })

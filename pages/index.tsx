@@ -2,12 +2,16 @@ import { GetServerSideProps } from "next"
 import Head from "next/head"
 
 import { DemoComponent, demoExperimentId } from "../components/DemoComponent"
-import { getProbabilities } from "../lib/db"
+import { Experiment } from "../components/Experiment"
+import { InstantBandit } from "../components/InstantBandit"
 import { sendConversion } from "../lib/lib"
-import { ProbabilityDistribution } from "../lib/types"
+import { InstantBanditProps } from "../lib/types"
+
 import styles from "../styles/Home.module.css"
 
-export default function Home(serverSideProps: Props) {
+
+
+export default function Home(serverSideProps: InstantBanditProps) {
   return (
     <div className={styles.container}>
       <Head>
@@ -49,6 +53,19 @@ export default function Home(serverSideProps: Props) {
             }}
           </DemoComponent>
         </p>
+        <>
+          <InstantBandit>
+            <Experiment name="A">
+              <h1> Welcome! You are currently viewing experiment A (the default) </h1>
+            </Experiment>
+            <Experiment name="B">
+              <h1> Welcome! You are currently viewing experiment B</h1>
+            </Experiment>
+            <Experiment name="C">
+              <h1> Welcome! You are currently viewing experiment C</h1>
+            </Experiment>
+          </InstantBandit>
+        </>
       </main>
 
       <footer className={styles.footer}>
@@ -60,15 +77,15 @@ export default function Home(serverSideProps: Props) {
         </a>
       </footer>
     </div>
+
   )
 }
 
-type Props = {
-  probabilities: ProbabilityDistribution | null
-}
-export const getStaticProps: GetServerSideProps<Props> = async () => {
-  const [probabilities] = await getProbabilities(demoExperimentId)
+export const getStaticProps: GetServerSideProps<InstantBanditProps> = async () => {
+  // TODO: Fetch the site here during SSR/SSG
+  // TODO: Ensure (test) exposures reported correctly
   return {
-    props: { probabilities },
+    props: {
+    }
   }
 }

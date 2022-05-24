@@ -1,7 +1,7 @@
 import Keyv from "@keyv/redis"
 import { bandit } from "./bandit"
 import { getPValue } from "./pvalue"
-import { Counts as Counts, ProbabilityDistribution, PValue } from "./types"
+import { Counts as Counts, InstantBanditProps, ProbabilityDistribution, PValue } from "./types"
 
 let _db: Keyv
 export function db() {

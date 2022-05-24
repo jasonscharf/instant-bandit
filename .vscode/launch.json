@@ -20,7 +20,11 @@
       "runtimeArgs": [
         "--inspect-brk",
         "${workspaceRoot}/node_modules/.bin/jest",
-        "--runInBand"
+        "--runInBand",
+        "-t",
+
+        // Put an expression here to only run matching tests
+        ""
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",

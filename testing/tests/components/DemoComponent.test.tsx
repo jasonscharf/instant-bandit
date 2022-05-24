@@ -2,16 +2,17 @@
  * @jest-environment jsdom
  */
 
-import { render, waitFor } from "@testing-library/react"
 import { getSessionVariant, setSessionVariant } from "../lib/lib"
 import * as lib from "../lib/lib"
-import { DemoComponent, demoExperimentId } from "./DemoComponent"
 
 beforeEach(() => {
   sessionStorage.clear()
 })
 
 describe("DemoComponent", () => {
+  it("is no longer used", () => {
+  })
+  /*
   it("should render the default variant A", async () => {
     const component = render(<DemoComponent />)
     const variant = await component.findByText(/variant a/i)
@@ -80,5 +81,5 @@ describe("DemoComponent", () => {
     const sendExposure = jest.spyOn(lib, "sendExposure")
     render(<DemoComponent probabilities={{ A: 1.0 }} />)
     expect(sendExposure).toBeCalled()
-  })
+  })*/
 })

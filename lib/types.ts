@@ -1,3 +1,6 @@
+import { InstantBanditState } from "./contexts"
+import { Site } from "./models"
+
 export type Variant = string
 export type Probability = number
 
@@ -6,9 +9,19 @@ export type Probability = number
  */
 export type ProbabilityDistribution = Record<Variant, Probability>
 
-export type InstantBanditOptions = {
-  probabilities?: ProbabilityDistribution | null // for overriding locally
-  preserveSession?: boolean // for overriding locally
+
+export interface InstantBanditProps {
+  preserveSession?: boolean
+  probabilities?: ProbabilityDistribution
+  experiments?: string[]
+  force?: string
+  site?: Site
+  fetcher?: (...args: any[]) => any
+  debug?: boolean
+
+  // TODO: Remove or hide there. They are really just used for testing async behaviour
+  onReady?: (state: InstantBanditState) => void
+  onError?: (err: Error | null, state: InstantBanditState | null) => void
 }
 
 export type ConversionOptions = {
