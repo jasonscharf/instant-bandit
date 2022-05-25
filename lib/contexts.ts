@@ -1,5 +1,6 @@
 import React from "react"
 import { Experiment, Site } from "./models"
+import { InstantBanditClient } from "./InstantBandit"
 import { InstantBanditProps } from "./types"
 import { DEFAULT_NAME, DEFAULT_SITE_NAME } from "./constants"
 
@@ -21,6 +22,15 @@ export interface InstantBanditScope {
   scope: string[] | []
 }
 
+// TODO: Expose to config BUT be wary of introducing flicker via context change
+const globalClient = new InstantBanditClient({
+  baseUrl: "http://localhost:3000",
+  siteUrl: "api/site",
+  metricsUrl: "api/metrics",
+})
+export const ClientContext = React.createContext(globalClient)
+
+// TODO: Immediate invoke?
 
 // TODO: To interface if no global methods are used
 export class InstantBanditState implements InstantBanditScope {

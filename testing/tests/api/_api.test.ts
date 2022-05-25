@@ -1,6 +1,6 @@
 // NOTE: next server should be running. Try `yarn run dev`.
 
-import { baseUrl, postData } from "../../lib/lib"
+import { baseUrl, postData } from "../../../lib/lib"
 
 describe("API", () => {
   it("responds", () => {

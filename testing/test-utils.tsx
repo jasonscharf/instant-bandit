@@ -11,3 +11,16 @@ export async function renderTest(tree: React.ReactElement): Promise<RenderResult
   await act(async () => { rendered = await render(tree) })
   return rendered
 }
+
+
+/**
+ * Useful for suppressing Jest's injected log behaviour
+ */
+export function disableJestLogging() {
+  jestConsole = global.console
+  global.console = require('console');
+}
+export function resetJestLogging() {
+  global.console = jestConsole
+}
+let jestConsole = global.console

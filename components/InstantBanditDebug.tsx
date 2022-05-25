@@ -1,4 +1,5 @@
 import { CSSProperties, PropsWithChildren, useContext, useEffect, useState } from "react"
+import { DEFAULT_NAME } from "../lib/constants"
 import { InstantBanditContext, InstantBanditScope, InstantBanditState, ScopeContext } from "../lib/contexts"
 import { defined } from "../lib/utils"
 
@@ -11,7 +12,8 @@ interface DebugState {
 const DEFAULT_STATE: DebugState = {
   renders: 0,
   effects: 0,
-}
+} as const
+Object.freeze(DEFAULT_STATE)
 
 
 type DebugCallbackProps = {
@@ -29,7 +31,7 @@ export interface DebugProps {
 }
 
 const InstantBanditDebug = (props: React.PropsWithChildren<DebugProps> = {}) => {
-  const [state, setState] = useState(DEFAULT_STATE)
+  const [state, setState] = useState(Object.assign({}, DEFAULT_STATE))
   const banditCtx = useContext(InstantBanditContext)
   const scopeCtx = useContext(ScopeContext)
 
@@ -42,7 +44,7 @@ const InstantBanditDebug = (props: React.PropsWithChildren<DebugProps> = {}) => 
   useEffect(() => {
     ++state.effects
 
-    console.debug(`[IB] dbg ${label} ${experiment} debug effect ${state.effects + 1}`)
+    console.info(`[IB] dbg ${label} ${experiment} debug effect ${state.effects + 1}`)
 
     if (onFirstEffect && state.effects === 1) {
       onFirstEffect({ debug: state, bandit: banditCtx, scope: scopeCtx })
@@ -53,10 +55,10 @@ const InstantBanditDebug = (props: React.PropsWithChildren<DebugProps> = {}) => 
     }
 
     if (defined(log)) {
-      console.debug(`[IB] dbg '${log}'`)
+      console.info(`[IB] dbg '${log}'`)
     }
 
-  }, [banditCtx])
+  }, [banditCtx.state])
 
 
   ++state.renders

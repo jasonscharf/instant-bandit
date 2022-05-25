@@ -14,8 +14,9 @@ export interface InstantBanditProps {
   preserveSession?: boolean
   probabilities?: ProbabilityDistribution
   experiments?: string[]
-  force?: string
+  select?: string
   site?: Site
+  block?: boolean
   fetcher?: (...args: any[]) => any
   debug?: boolean
 

@@ -1,25 +1,17 @@
 import { NextApiRequest, NextApiResponse } from "next"
-import * as constants from "../../lib/constants"
-import { Site } from "../../lib/models"
+import { DEMO_SITE } from "../../lib/examples"
 
 
-const DEMO_SITE: Site = {
-  name: constants.DEFAULT_SITE_NAME,
-  experiments: [
-    {
-      name: "A",
-    },
-    {
-      name: "B",
-    },
-    {
-      name: "C",
-    },
-  ]
-}
 
 // TODO: Only show subset of props for client via server util method
+// TODO: Notes about CORS
+// TODO: Whitelist the IB headers, remove Authorization
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
   res.status(200).json(DEMO_SITE)
 }

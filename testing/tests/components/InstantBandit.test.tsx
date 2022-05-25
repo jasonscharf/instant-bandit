@@ -5,12 +5,12 @@ import "whatwg-fetch"
 import React from "react"
 import fetchMock, { FetchMock } from "jest-fetch-mock"
 
-import { Debug } from "../../components/InstantBanditDebug"
-import { InstantBandit } from "../../components/InstantBandit"
-import { InstantBanditLoadState, InstantBanditState } from "../../lib/contexts"
-import { defined } from "../../lib/utils"
-import { renderTest } from "../test-utils"
-import { TEST_SITE_AB } from "../configs"
+import { Debug } from "../../../components/InstantBanditDebug"
+import { InstantBandit } from "../../../components/InstantBandit"
+import { InstantBanditLoadState, InstantBanditState } from "../../../lib/contexts"
+import { defined } from "../../../lib/utils"
+import { disableJestLogging, renderTest } from "../../test-utils"
+import { TEST_SITE_AB } from "../../configs"
 
 
 declare var fetch: Promise<Response> & FetchMock
@@ -18,18 +18,23 @@ declare var fetch: Promise<Response> & FetchMock
 describe("InstantBandit component", () => {
 
   beforeAll(() => {
+    disableJestLogging()
     fetchMock.enableMocks()
+
+    fetch.mockResponse(async (init) => await JSON.stringify(TEST_SITE_AB))
+  })
+
+  afterAll(() => {
+    fetchMock.resetMocks()
   })
 
   beforeEach(() => {
     sessionStorage.clear()
-    fetchMock.resetMocks()
   })
 
   describe("onReady", () => {
     it("calls the onReady callback", async () => {
       let calls = 0
-      fetch.mockResponseOnce(async (init) => await JSON.stringify(TEST_SITE_AB))
 
       // NOTE: Can't assign type here or shows an error. TS 4.3.2.
       let readyState
@@ -118,7 +123,7 @@ describe("InstantBandit component", () => {
 
   describe("selection", () => {
     it("performs selection even if initial fetch fails", async () => {
-      fetch.mockResponseOnce(() => Promise.reject(new Error("DUMMY")))
+      fetch.mockResponseOnce(() => Promise.reject(new Error("FAKE-ERROR")))
 
       // TODO: Find out why adding types here breaks the code underneath
       let erroredState, error
