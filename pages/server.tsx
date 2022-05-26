@@ -58,7 +58,7 @@ export default function Static(serverSideProps: InstantBanditProps) {
 
 // TODO: Need to use client to perform selection as well
 const client = new InstantBanditClient()
-export const getStaticProps: GetServerSideProps<InstantBanditProps> = async () => {
+export const getServerSideProps: GetServerSideProps<InstantBanditProps> = async () => {
   return {
     props: {
       site: await client.load(),
