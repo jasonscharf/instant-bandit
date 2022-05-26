@@ -1,13 +1,11 @@
 import { GetServerSideProps } from "next"
 import Head from "next/head"
 
-import { DemoComponent, demoExperimentId } from "../components/DemoComponent"
-import { InstantBandit } from "../components/InstantBandit"
+import { InstantBandit } from "../components/InstantBanditComponent"
 import { InstantBanditClient } from "../lib/InstantBandit"
 import { InstantBanditProps } from "../lib/types"
 import { Placeholder } from "../components/Placeholder"
 import { Variant } from "../components/Variant"
-import { sendConversion } from "../lib/lib"
 
 import styles from "../styles/Home.module.css"
 

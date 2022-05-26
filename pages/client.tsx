@@ -1,7 +1,7 @@
 import Head from "next/head"
 
 import { Variant } from "../components/Variant"
-import { InstantBandit } from "../components/InstantBandit"
+import { InstantBandit } from "../components/InstantBanditComponent"
 import { Placeholder } from "../components/Placeholder"
 import NoSSR from "../components/NoSSR"
 

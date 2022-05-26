@@ -57,13 +57,9 @@ export function Mark(props: PropsWithChildren<any>) {
         })
       })
 
-
-
-      //debugger
       ++state.mutations
     },
-    []
-  )
+    [])
 
   if (typeof document !== "undefined") {
     let foo = document.querySelectorAll("#foo")[0]
