@@ -1,27 +1,22 @@
-import { PropsWithChildren, useContext, useState } from "react"
+import { PropsWithChildren, useContext, useLayoutEffect, useState } from "react"
 import useSWR from "swr"
 
 import { Debug } from "./InstantBanditDebug"
 import { InstantBanditProps } from "../lib/types"
 import { Experiment, Site } from "../lib/models"
-import { DEFAULT_CONTEXT_STATE, InstantBanditContext, InstantBanditLoadState, InstantBanditState } from "../lib/contexts"
+import { ClientContext, DEFAULT_CONTEXT_STATE, InstantBanditContext, InstantBanditLoadState, InstantBanditState } from "../lib/contexts"
 import { defined } from "../lib/utils"
 import { DEFAULT_NAME, DEFAULT_SITE_NAME } from "../lib/constants"
 import experiments from "../pages/api/experiments"
 
 
-const DEFAULT_SITE_PATH = "/api/site"
+const DEFAULT_SITE_PATH = "api/site"
 const DEFAULT_FETCHER = (...args) => (fetch as any)(...args).then(res => res.json())
 
 const DEBUG_FETCH = async (...args) => {
-  debugger
   const resp = await DEFAULT_FETCHER(...args)
   return resp
 }
-
-
-// TODO: Debug. rm
-let count = 0
 
 // TODO: Pre-fetch
 // TODO: Make context internal, expose state and experiment via Jotai
@@ -33,10 +28,10 @@ let count = 0
 // TODO: Separate out internal state tracking / contexts
 
 export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
-  ++count
-
-  const ctx = useContext(InstantBanditContext)
   const [state, setBanditState] = useState(() => createNewBanditState(props))
+  const client = useContext(ClientContext)
+
+  const [ready, setReady] = useState(false)
 
   const {
     debug,
@@ -50,37 +45,42 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
   const configFetcher = debug ? DEBUG_FETCH : (fetcher ?? DEFAULT_FETCHER)
   const sitePath = DEFAULT_SITE_PATH + `?ts=${new Date().getTime()}`
 
-  // TODO: We don't actually need SWR here - remove
-  // const { data, error } = useSWR<Site, Error>(sitePath, configFetcher)
   // TODO: Note about state transitions and context changes forcing updated
 
-  if (siteProp) {
+  if (siteProp && state.state === InstantBanditLoadState.PRELOAD) {
     console.info(`[IB] Got site from props, initializing...`)
     initialize(siteProp)
   }
 
-  // TODO: To client
   // Fetches the experiments + metrics
-  async function fetchData() {
+  async function load() {
     try {
       // NOTE: This is required for hydration sync!
       await Promise.resolve()
 
-      console.info(`[IB] Fetching experiments...`)
-      const resp = await fetch(`http://localhost:3000/${sitePath}`)
-      const data = await resp.json()
+      console.info(`[IB] Fetching site data...`)
+      const site = await client.load("localhost", "123")
 
-      console.info(`[IB] Got experiments`, data)
-      initialize(data)
-    } catch (err) {
-      console.warn(`[IB] Error fetching experiments: ${err}`)
+      console.info(`[IB] Got site data`, site)
+      initialize(site)
+    }
+    catch (err) {
+      console.warn(`[IB] Error fetching site data: ${err}`)
       initialize(null, err)
     }
   }
 
+  // Dispatching the initial "ready" state update drastically reduces visible flicker.
+  useLayoutEffect(() => {
+    if (ready) {
+      setBanditState({ ...state })
+    }
+  }, [ready])
+
   // Invokes a render and an onReady callback
   function broadcastReadyState() {
     state.state = InstantBanditLoadState.READY
+    setReady(true)
     setBanditState({ ...state })
 
     console.info(`[IB] Bandit ready`, state)
@@ -111,20 +111,12 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
     let experimentName = DEFAULT_NAME
 
     // If the "select" field is present in the model, it is observed
-    if (defined(selectProp) || defined(site.select)) {
-      experimentName = selectProp ?? site.select ?? DEFAULT_NAME
-      selectedExperiment = selectSpecific(experimentName)
-    } else {
-      // TODO: Extract selection logic //
-      const { experiments } = state.site
-
-      // TEMP: Pick random experiment
-      const ix = Math.min(Math.floor(Math.random() * (experiments.length + 1)), experiments.length - 1)
-      selectedExperiment = experiments[ix]
-      // 
+    if (defined(selectProp)) {
+      selectedExperiment = selectSpecific(selectProp!)
     }
-
-    if (!selectedExperiment) {
+    else if (defined(state.site.select)) {
+      selectedExperiment = selectSpecific(state.site.select!)
+    }else if (!selectedExperiment) {
       selectedExperiment = selectFallbackFor(experimentName)
     }
 
@@ -136,7 +128,7 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
 
   // No matching experiment? Use the fallback
   function selectFallbackFor(desiredExperiment: string) {
-    console.warn(`[IB] could not find experiment '${desiredExperiment}'. Using '${DEFAULT_NAME}'`)
+    console.warn(`[IB] Could not find experiment '${desiredExperiment}'. Falling back to '${DEFAULT_NAME}'`)
     let fallback = FALLBACK_SITE.experiments[0]
     if (!fallback) {
       fallback = {
@@ -153,6 +145,7 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
 
   // Selects a specific experiment by name
   function selectSpecific(experimentName: string) {
+    console.info(`[IB] Select '${experimentName}'`)
     const { site } = state
     return site!.experiments.find(e => e.name === experimentName) ?? null
   }
@@ -203,10 +196,10 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
     //setBanditState({ ...state })
 
     // If we have a model from props, use that definition, including any metrics baked
-    fetchData()
+    load()
   }
 
-  const isRenderingOnServer= typeof window === "undefined"
+  const isRenderingOnServer = typeof window === "undefined"
   if (isRenderingOnServer) {
     console.info(`[IB] [Server render]`)
   }
