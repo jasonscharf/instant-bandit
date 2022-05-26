@@ -1,6 +1,6 @@
 import { CSSProperties, PropsWithChildren, useContext, useEffect, useState } from "react"
 import { DEFAULT_NAME } from "../lib/constants"
-import { InstantBanditContext, InstantBanditScope, InstantBanditState, ScopeContext } from "../lib/contexts"
+import { InstantBanditContext, Scope, InstantBanditState, ScopeContext } from "../lib/contexts"
 import { defined } from "../lib/utils"
 
 
@@ -19,7 +19,7 @@ Object.freeze(DEFAULT_STATE)
 type DebugCallbackProps = {
   debug: DebugState
   bandit: InstantBanditState
-  scope: InstantBanditScope
+  scope: Scope
 }
 
 export interface DebugProps {
@@ -42,7 +42,6 @@ const InstantBanditDebug = (props: React.PropsWithChildren<DebugProps> = {}) => 
   const scopeCtxStr = JSON.stringify(scopeCtx)
 
   useEffect(() => {
-    ++state.effects
 
     console.info(`[IB] dbg ${label} ${experiment} debug effect ${state.effects + 1}`)
 
@@ -58,10 +57,9 @@ const InstantBanditDebug = (props: React.PropsWithChildren<DebugProps> = {}) => 
       console.info(`[IB] dbg '${log}'`)
     }
 
+    ++state.effects
+    setState(state)
   }, [banditCtx.state])
-
-
-  ++state.renders
 
   return (
     <>
@@ -72,7 +70,6 @@ const InstantBanditDebug = (props: React.PropsWithChildren<DebugProps> = {}) => 
         <span data-testid="ib-debug-state">{banditCtxStr}</span>
         <span data-testid="ib-debug-scope">{scopeCtxStr}</span>
         <span data-testid="ib-debug-stats-effects">{state.effects}</span>
-        <span data-testid="ib-debug-stats-renders">{state.renders}</span>
       </div>
     </>
   )

@@ -1,5 +1,5 @@
-import { CSSProperties, PropsWithChildren, useContext, useEffect, useState } from "react"
-import { DEFAULT_SCOPE_CONTEXT, InstantBanditContext, InstantBanditLoadState, InstantBanditScope, ScopeContext } from "../lib/contexts"
+import { PropsWithChildren, useContext, useState } from "react"
+import { DEFAULT_SCOPE_CONTEXT, InstantBanditContext, LoadState, Scope, ScopeContext } from "../lib/contexts"
 
 
 export interface ExperimentComponentProps {
@@ -7,46 +7,34 @@ export interface ExperimentComponentProps {
   default?: boolean
 }
 
+/**
+ * Represents a specific variation of a component or tree of components
+ * @param props 
+ * @returns 
+ */
 export function Experiment(props: PropsWithChildren<ExperimentComponentProps>) {
   const { default: isDefaultProp, name } = props
-  const { experiment, state: banditState, options: settings, site } = useContext(InstantBanditContext)
-  const [scopeState, setScopeState] = useState<InstantBanditScope>(() => Object.assign({}, DEFAULT_SCOPE_CONTEXT))
+  const { experiment, siteName, state: banditState } = useContext(InstantBanditContext)
+  const [scopeState, setScopeState] = useState<Scope>(
+    () => Object.assign({}, DEFAULT_SCOPE_CONTEXT, {
+      experiment,
+      siteName: siteName,
+    } as Scope))
+
+  // TODO: Test scope and scope transitions
 
   const isDefault = !!isDefaultProp
   const isSelected = (experiment && experiment.name === name)
-  const banditIsPreSelection = banditState !== InstantBanditLoadState.READY
+  const notReady = banditState !== LoadState.READY
 
   function shouldBePresent() {
-    return isSelected || (isDefault && banditIsPreSelection)
+    return isSelected || (isDefault && notReady)
   }
 
   const present = shouldBePresent()
-
-  console.info(`[IB] Render variant '${name}' present? ${present} default? ${isDefault} selected? ${isSelected} pre-selection state? ${banditIsPreSelection}`)
-
-
-  // DEBUG
-  const maybeOverlaid = (isDefault && banditIsPreSelection)
-    ? <div style={overlayStyle}>{props.children}</div>
-    : props.children
-
-  /*
-  return (
-    <>{present && maybeOverlaid}</>
-  )*/
-
   return (
     <ScopeContext.Provider value={scopeState}>
       {present && props.children}
     </ScopeContext.Provider>
   )
-}
-
-const overlayStyle: CSSProperties = {
-  position: "relative",
-  left: 0,
-  right: 0,
-  top: 0,
-  bottom: 0,
-  pointerEvents: "none",
 }

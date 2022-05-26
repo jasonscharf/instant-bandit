@@ -7,13 +7,13 @@ import fetchMock, { FetchMock } from "jest-fetch-mock"
 
 import { Debug } from "../../../components/InstantBanditDebug"
 import { InstantBandit } from "../../../components/InstantBandit"
-import { InstantBanditLoadState, InstantBanditState } from "../../../lib/contexts"
+import { LoadState, InstantBanditState } from "../../../lib/contexts"
 import { defined } from "../../../lib/utils"
 import { disableJestLogging, renderTest } from "../../test-utils"
 import { TEST_SITE_AB } from "../../configs"
 
 
-declare var fetch: Promise<Response> & FetchMock
+declare const fetch: Promise<Response> & FetchMock
 
 describe("InstantBandit component", () => {
 
@@ -106,7 +106,7 @@ describe("InstantBandit component", () => {
       const component = await renderTest(
         <InstantBandit>
           <Debug onFirstEffect={({ bandit }) => {
-            expect(bandit.state).toStrictEqual(InstantBanditLoadState.WAIT)
+            expect(bandit.state).toStrictEqual(LoadState.WAIT)
           }} />
         </InstantBandit>
       )
@@ -136,7 +136,7 @@ describe("InstantBandit component", () => {
 
             // If an error is received, IB will move to the ready state in order to load
             // the invariant as a fallback
-            expect(bandit.state).toStrictEqual(InstantBanditLoadState.WAIT)
+            expect(bandit.state).toStrictEqual(LoadState.WAIT)
           }} />
         </InstantBandit>
       )

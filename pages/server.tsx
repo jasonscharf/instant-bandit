@@ -28,15 +28,15 @@ export default function Static(serverSideProps: InstantBanditProps) {
         <main className={styles.main}>
           <h1 className={styles.description}>NextJS SSR test</h1>
           <>
-            <div style={{ minHeight: "2em", background: "pink" }}>
+            <div className={styles.example}>
               <Experiment name="A">
-                <h1 style={{ background: "red" }}>Welcome! You are currently viewing experiment A</h1>
+                <h1 style={{ background: "red" }}>Welcome! You are currently viewing variant A</h1>
               </Experiment>
               <Experiment name="B">
-                <h1 style={{ background: "green" }}>Welcome! You are currently viewing experiment B</h1>
+                <h1 style={{ background: "green" }}>Welcome! You are currently viewing variant B</h1>
               </Experiment>
               <Experiment name="C">
-                <h1 style={{ background: "blue" }}>Welcome! You are currently viewing experiment C</h1>
+                <h1 style={{ background: "blue" }}>Welcome! You are currently viewing variant C</h1>
               </Experiment>
             </div>
           </>
@@ -61,7 +61,7 @@ const client = new InstantBanditClient()
 export const getStaticProps: GetServerSideProps<InstantBanditProps> = async () => {
   return {
     props: {
-      site: await client.load("localhost", "123"),
+      site: await client.load(),
     }
   }
 }

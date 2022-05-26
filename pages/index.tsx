@@ -27,54 +27,29 @@ export default function Home(serverSideProps: InstantBanditProps) {
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.description}>Welcome to Instant Bandit</h1>
+        <h1 className={styles.header}>Welcome to Instant Bandit</h1>
 
-        {/* 
-        <DemoComponent
-          preserveSession={false}
-          // comment out this line to fetch probabilities client-side
-          probabilities={serverSideProps.probabilities}
-        >
-          {(props) => {
-            return (
-              <button
-                className={styles.title}
-                // AB test logic here
-                style={{
-                  background: props.variant === "A" ? "red" : "green",
-                }}
-                onClick={() => {
-                  alert(`Your click will be recorded`)
-                  sendConversion({ experimentIds: [demoExperimentId], value: 1 })
-                  // also try:
-                  // sendConversion({ experimentIds: [experimentId], value: 99.99 })
-                }}
-              >
-                👉 Click me 👈
-              </button>
-            )
-          }}
-        </DemoComponent>
+        <div className={styles.example}>
+          <InstantBandit {...serverSideProps}>
+            <Experiment default>
+              <h1 style={{ opacity: 0.0 }}>
+                This is a placeholder content.
+                Normally it would not have content it.
+                Placeholders are intended to fill space, preserving layout and preventing CLS.
+              </h1>
+            </Experiment>
+            <Experiment name="A">
+              <h1 style={{ background: "red" }}>Welcome! You are currently viewing variant A</h1>
+            </Experiment>
+            <Experiment name="B">
+              <h1 style={{ background: "green" }}>Welcome! You are currently viewing variant B</h1>
+            </Experiment>
+            <Experiment name="C">
+              <h1 style={{ background: "blue" }}>Welcome! You are currently viewing variant C</h1>
+            </Experiment>
+          </InstantBandit>
+        </div>
 
-                */}
-        <>
-          <div style={{ minHeight: "2em" }}>
-            <InstantBandit {...serverSideProps}>
-              <Experiment default>
-                <div style={{ minHeight: "2em" }}></div>
-              </Experiment>
-              <Experiment name="A">
-                <h1 style={{ background: "red" }}>Welcome! You are currently viewing experiment A</h1>
-              </Experiment>
-              <Experiment name="B">
-                <h1 style={{ background: "green" }}>Welcome! You are currently viewing experiment B</h1>
-              </Experiment>
-              <Experiment name="C">
-                <h1 style={{ background: "blue" }}>Welcome! You are currently viewing experiment C</h1>
-              </Experiment>
-            </InstantBandit>
-          </div>
-        </>
       </main>
 
       <footer className={styles.footer}>
@@ -86,17 +61,16 @@ export default function Home(serverSideProps: InstantBanditProps) {
         </a>
       </footer>
     </div >
-
   )
 }
 
+// Comment out to have loading done in the browser
 const client = new InstantBanditClient()
-export const getStaticProps: GetServerSideProps<InstantBanditProps> = async () => {
-  // TODO: Fetch the site here during SSR/SSG
-  // TODO: Ensure (test) exposures reported correctly
+export const getServerSideProps: GetServerSideProps<InstantBanditProps> = async () => {
+  const site = await client.load()
   return {
     props: {
-      site: await client.load("localhost", "123"),
+      site,
     }
   }
 }

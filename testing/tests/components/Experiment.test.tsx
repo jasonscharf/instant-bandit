@@ -8,18 +8,17 @@ import fetchMock, { FetchMock } from "jest-fetch-mock"
 import { Debug } from "../../../components/InstantBanditDebug"
 import { Experiment } from "../../../components/Experiment"
 import { InstantBandit } from "../../../components/InstantBandit"
-import { InstantBanditLoadState } from "../../../lib/contexts"
+import { LoadState } from "../../../lib/contexts"
 import { disableJestLogging, renderTest } from "../../test-utils"
 import { TEST_SITE_AB } from "../../configs"
 import { screen, waitFor } from "@testing-library/react"
 
 
-declare var fetch: Promise<Response> & FetchMock
+declare const fetch: Promise<Response> & FetchMock
 
 
 describe("Experiment", () => {
   beforeAll(() => {
-    disableJestLogging()
     fetchMock.enableMocks()
   })
 
@@ -28,7 +27,6 @@ describe("Experiment", () => {
   })
 
   beforeEach(() => {
-    disableJestLogging()
     sessionStorage.clear()
   })
 
@@ -48,7 +46,7 @@ describe("Experiment", () => {
           <InstantBandit select="B">
             <span data-testid={visible}>visible</span>
             <Debug onFirstEffect={({ bandit }) => {
-              expect(bandit.state).toStrictEqual(InstantBanditLoadState.WAIT)
+              expect(bandit.state).toStrictEqual(LoadState.WAIT)
             }} />
 
             <Experiment name="A">
@@ -77,7 +75,7 @@ describe("Experiment", () => {
 
             <Experiment name="A" default>
               <Debug onFirstEffect={({ bandit }) => {
-                expect(bandit.state).toStrictEqual(InstantBanditLoadState.WAIT)
+                expect(bandit.state).toStrictEqual(LoadState.WAIT)
                 presented = true
               }} />
 
@@ -89,6 +87,21 @@ describe("Experiment", () => {
       })
     })
   })
+
+  // TODO: Placeholders, invariants
+  /*
+ <InstantBandit {...serverSideProps}>
+  <Placeholder>
+    <div>
+      This block will be rendered during loading.
+      Placeholders hold layout in place while variants are loaded, preventing CLS
+    </div>
+  </Placeholder
+
+  <Invariant>
+    This is shown when there no variant has been loaded
+  </Invariant>
+  */
 
   describe("suspense", () => {
     it("suspends its children while it's unselected", async () => {

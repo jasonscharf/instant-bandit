@@ -1,13 +1,10 @@
-import { PropsWithChildren, useContext, useLayoutEffect, useState } from "react"
-import useSWR from "swr"
+import { PropsWithChildren, useContext, useState } from "react"
 
-import { Debug } from "./InstantBanditDebug"
 import { InstantBanditProps } from "../lib/types"
 import { Experiment, Site } from "../lib/models"
-import { ClientContext, DEFAULT_CONTEXT_STATE, InstantBanditContext, InstantBanditLoadState, InstantBanditState } from "../lib/contexts"
-import { defined } from "../lib/utils"
+import { ClientContext, DEFAULT_CONTEXT_STATE, InstantBanditContext, LoadState, InstantBanditState } from "../lib/contexts"
+import { defined, useIsomorphicLayoutEffect } from "../lib/utils"
 import { DEFAULT_NAME, DEFAULT_SITE_NAME } from "../lib/constants"
-import experiments from "../pages/api/experiments"
 
 
 const DEFAULT_SITE_PATH = "api/site"
@@ -42,12 +39,9 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
     site: siteProp,
   } = props
 
-  const configFetcher = debug ? DEBUG_FETCH : (fetcher ?? DEFAULT_FETCHER)
-  const sitePath = DEFAULT_SITE_PATH + `?ts=${new Date().getTime()}`
-
   // TODO: Note about state transitions and context changes forcing updated
 
-  if (siteProp && state.state === InstantBanditLoadState.PRELOAD) {
+  if (siteProp && state.state === LoadState.PRELOAD) {
     console.info(`[IB] Got site from props, initializing...`)
     initialize(siteProp)
   }
@@ -55,23 +49,23 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
   // Fetches the experiments + metrics
   async function load() {
     try {
-      // NOTE: This is required for hydration sync!
+
+      // TODO: NOTE: This is required for hydration sync. It is unclear why.
       await Promise.resolve()
 
       console.info(`[IB] Fetching site data...`)
-      const site = await client.load("localhost", "123")
+      const site = await client.load()
 
       console.info(`[IB] Got site data`, site)
       initialize(site)
-    }
-    catch (err) {
+    } catch (err) {
       console.warn(`[IB] Error fetching site data: ${err}`)
       initialize(null, err)
     }
   }
 
   // Dispatching the initial "ready" state update drastically reduces visible flicker.
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (ready) {
       setBanditState({ ...state })
     }
@@ -79,7 +73,7 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
 
   // Invokes a render and an onReady callback
   function broadcastReadyState() {
-    state.state = InstantBanditLoadState.READY
+    state.state = LoadState.READY
     setReady(true)
     setBanditState({ ...state })
 
@@ -99,7 +93,7 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
   // If the "select" property of the site model is set, it indicates that selection
   // was performed server-side, or intentionally set by an author.
   function selectExperiment() {
-    state.state = InstantBanditLoadState.SELECTING
+    state.state = LoadState.SELECTING
 
     let selectedExperiment: Experiment | null = null
     if (!state.site) {
@@ -113,15 +107,14 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
     // If the "select" field is present in the model, it is observed
     if (defined(selectProp)) {
       selectedExperiment = selectSpecific(selectProp!)
-    }
-    else if (defined(state.site.select)) {
+    } else if (defined(state.site.select)) {
       selectedExperiment = selectSpecific(state.site.select!)
-    }else if (!selectedExperiment) {
-      selectedExperiment = selectFallbackFor(experimentName)
+    } else if (!selectedExperiment) {
+      selectedExperiment = selectFallbackFor(DEFAULT_NAME)
     }
 
     state.experiment = selectedExperiment
-    state.state = InstantBanditLoadState.READY
+    state.state = LoadState.READY
 
     console.info(`[IB] Bandit selects experiment "${state.experiment?.name}"`, state.experiment)
   }
@@ -153,18 +146,18 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
   // Initializes the IB and selects an experiment
   // TODO: Test error handling - must continue when site config absent
   function initialize(data?: Site | null, error?: Error | null) {
-    if (defined(data) && (state.state === InstantBanditLoadState.WAIT || state.state === InstantBanditLoadState.PRELOAD)) {
+    if (defined(data) && (state.state === LoadState.WAIT || state.state === LoadState.PRELOAD)) {
       console.info(`[IB] Bandit received config`, data, error)
 
       state.site = data!
       selectExperiment()
 
-      state.state = InstantBanditLoadState.READY
+      state.state = LoadState.READY
       broadcastReadyState()
       return
     }
 
-    if (error && state.state === InstantBanditLoadState.WAIT) {
+    if (error && state.state === LoadState.WAIT) {
       console.warn(`[IB] Error fetching config`, error)
 
       state.error = error
@@ -187,13 +180,8 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
   }
 
   // Kick-off the initialization process
-  if (state.state === InstantBanditLoadState.PRELOAD) {
-    state.state = InstantBanditLoadState.WAIT
-
-    // TODO: Note about intentionally not broadcasting state here
-    //  - (the state is preserved in the context)
-    // TODO: Note that this can result in stale UI in the Debug component. Address
-    //setBanditState({ ...state })
+  if (state.state === LoadState.PRELOAD) {
+    state.state = LoadState.WAIT
 
     // If we have a model from props, use that definition, including any metrics baked
     load()
@@ -202,10 +190,6 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
   const isRenderingOnServer = typeof window === "undefined"
   if (isRenderingOnServer) {
     console.info(`[IB] [Server render]`)
-  }
-
-  // TODO: Allow the bandit to optionally block child renders?
-  if (blockProp && state.state === InstantBanditLoadState.WAIT) {
   }
 
   return (

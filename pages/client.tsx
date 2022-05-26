@@ -1,17 +1,11 @@
-import dynamic from "next/dynamic"
 import Head from "next/head"
 
 import { Experiment } from "../components/Experiment"
 import { InstantBandit } from "../components/InstantBandit"
-import { InstantBanditProps } from "../lib/types"
-import { DEMO_SITE } from "../lib/examples"
 
 import styles from "../styles/Home.module.css"
 import NoSSR from "../components/NoSSR"
-import { Debug } from "../components/InstantBanditDebug"
-import { useContext } from "react"
-import { ScopeContext } from "../lib/contexts"
-
+import { Placeholder } from "../components/Placeholder"
 
 
 export default function ClientSideRendering() {
@@ -30,9 +24,19 @@ export default function ClientSideRendering() {
 
         <InstantBandit>
           <main className={styles.main}>
-            <h1 className={styles.description}>NextJS CSR test</h1>
+            <h1 className={styles.header}>NextJS CSR/SSG test</h1>
+            <p className={styles.description}>
+              This example explicitly disables server-side rendering.
+              Loading and variant selection is done entirely in the browser.
+              This use case is where we expect to see the most CLS due to network latency.
+            </p>
             <>
-              <div style={{ minHeight: "2em" }}>
+              <div className={styles.example}>
+
+                <Placeholder>
+                  <h1>Invisible placeholder element to preserve layout</h1>
+                </Placeholder>
+
                 <Experiment name="A">
                   <h1 style={{ background: "red" }}>Welcome! You are currently viewing experiment A</h1>
                 </Experiment>

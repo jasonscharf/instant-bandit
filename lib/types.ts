@@ -1,5 +1,5 @@
 import { InstantBanditState } from "./contexts"
-import { Site } from "./models"
+import { Experiment, Site } from "./models"
 
 export type Variant = string
 export type Probability = number
@@ -25,6 +25,17 @@ export interface InstantBanditProps {
   onError?: (err: Error | null, state: InstantBanditState | null) => void
 }
 
+export interface AlgorithmImpl<TAlgoArgs, TMetadata = unknown> {
+  select(args: SelectionArgs): Promise<{ selection: Experiment, meta?: TMetadata }>
+}
+
+export type SelectionArgs = {
+  algo: Algorithm | string
+  variants: Experiment[]
+}
+
+export type SelectionDelegate = (args: SelectionArgs) => Promise<Experiment>
+
 export type ConversionOptions = {
   experimentIds?: string[] // whitelist of experiments to associate with the conversion
   value?: number // optional value of the conversion
@@ -40,5 +51,17 @@ export type ProbabilitiesResponse = {
   pValue: PValue | null
 }
 
-// p-value of difference in counts between variants
+// p-value of difference between variants
 export type PValue = number
+
+/**
+ * Algorithms to use when selecting a variant.
+ * See the README for an overview.
+ */
+export enum Algorithm {
+  RANDOM = "random",
+  EPSILON_GREEDY = "epsilon-greedy-mab",
+}
+
+export type AlgorithmFactory = () => Experiment
+export type AlgorithmBlock = Record<string, AlgorithmFactory>

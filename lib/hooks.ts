@@ -1,18 +1,16 @@
 import { useContext } from "react"
-import { InstantBanditContext, InstantBanditScope, InstantBanditState, ScopeContext } from "./contexts"
+import { InstantBanditContext, Scope, InstantBanditState, ScopeContext } from "./contexts"
 
 
-export function useBandit(): InstantBanditState & InstantBanditScope {
-  const { state, options, site } = useContext(InstantBanditContext)
-  const { experiment, scope, siteName } = useContext(ScopeContext)
+export function useBandit(): InstantBanditState & Scope {
+  const { state, site } = useContext(InstantBanditContext)
+  const { experiment, siteName } = useContext(ScopeContext)
 
   return {
+    state,
     error: null,
-    experiment,
-    options,
     site,
     siteName,
-    state,
-    scope,
+    experiment,
   }
 }

@@ -113,3 +113,11 @@
     flex-direction: column;
   }
 }
+
+.description {
+  font-size: 1.2em
+}
+
+.example > h1 {
+  padding: 2em
+}
