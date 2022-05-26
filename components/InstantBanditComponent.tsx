@@ -1,4 +1,4 @@
-import { PropsWithChildren, useContext, useEffect, useState } from "react"
+import { PropsWithChildren, Suspense, useContext, useEffect, useState } from "react"
 
 import { InstantBanditProps } from "../lib/types"
 import { ClientContext, DEFAULT_CONTEXT_STATE, InstantBanditContext, LoadState, InstantBanditState } from "../lib/contexts"
@@ -96,7 +96,7 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
       console.warn(`[IB] Error fetching configuration`, error)
       state.error = error
       state.site = FALLBACK_SITE
-      state.variant = await client.selectVariant(site!, selectProp)
+      state.variant = await client.selectVariant(state.site!, selectProp)
 
       try {
         if (props.onError) {
@@ -136,7 +136,7 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
 
   return (
     <InstantBanditContext.Provider value={state}>
-      {props.children}
+        {ready && props.children}
     </InstantBanditContext.Provider>
   )
 }
