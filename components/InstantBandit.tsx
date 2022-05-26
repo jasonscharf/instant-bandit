@@ -1,38 +1,25 @@
-import { PropsWithChildren, useContext, useState } from "react"
+import { PropsWithChildren, useContext, useEffect, useState } from "react"
 
 import { InstantBanditProps } from "../lib/types"
-import { Experiment, Site } from "../lib/models"
 import { ClientContext, DEFAULT_CONTEXT_STATE, InstantBanditContext, LoadState, InstantBanditState } from "../lib/contexts"
+import { Site } from "../lib/models"
 import { defined, useIsomorphicLayoutEffect } from "../lib/utils"
-import { DEFAULT_NAME, DEFAULT_SITE_NAME } from "../lib/constants"
+import { FALLBACK_SITE } from "../lib/InstantBandit"
 
 
-const DEFAULT_SITE_PATH = "api/site"
-const DEFAULT_FETCHER = (...args) => (fetch as any)(...args).then(res => res.json())
-
-const DEBUG_FETCH = async (...args) => {
-  const resp = await DEFAULT_FETCHER(...args)
-  return resp
-}
-
-// TODO: Pre-fetch
-// TODO: Make context internal, expose state and experiment via Jotai
-// TODO: Fallback behaviour when metrics are unavailable
-// TODO: Extract selection logic to client
-// TODO: Forward declarations of experiments
-// TODO: Check experiments
-// TODO: Set cookie through a delegate
+// TODO: Forward declarations of variants
+// TODO: Check variants
 // TODO: Separate out internal state tracking / contexts
 
 export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
-  const [state, setBanditState] = useState(() => createNewBanditState(props))
+  const [state, setBanditState] = useState(createNewBanditState(props))
   const client = useContext(ClientContext)
 
   const [ready, setReady] = useState(false)
 
   const {
     debug,
-    experiments,
+    variants,
     fetcher,
     block: blockProp,
     select: selectProp,
@@ -46,7 +33,11 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
     initialize(siteProp)
   }
 
-  // Fetches the experiments + metrics
+  useEffect(() => {
+    console.log(`[IB] UseEffect`)
+  }, [state])
+
+  // Fetches the variants, selects a variant, and initializes the component
   async function load() {
     try {
 
@@ -56,7 +47,6 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
       console.info(`[IB] Fetching site data...`)
       const site = await client.load()
 
-      console.info(`[IB] Got site data`, site)
       initialize(site)
     } catch (err) {
       console.warn(`[IB] Error fetching site data: ${err}`)
@@ -64,16 +54,16 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
     }
   }
 
-  // Dispatching the initial "ready" state update drastically reduces visible flicker.
-  useIsomorphicLayoutEffect(() => {
-    if (ready) {
-      setBanditState({ ...state })
-    }
-  }, [ready])
+  function log(...items: unknown[]) {
+    if (!debug) return
+    console.info(...items)
+  }
 
   // Invokes a render and an onReady callback
   function broadcastReadyState() {
     state.state = LoadState.READY
+
+    // Setting this to pick up in layoutEffect
     setReady(true)
     setBanditState({ ...state })
 
@@ -88,83 +78,25 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
     }
   }
 
-
-  // Selects the appropriate experiment.
-  // If the "select" property of the site model is set, it indicates that selection
-  // was performed server-side, or intentionally set by an author.
-  function selectExperiment() {
-    state.state = LoadState.SELECTING
-
-    let selectedExperiment: Experiment | null = null
-    if (!state.site) {
-      console.info(`[IB] Using fallback site model`)
-      state.site = FALLBACK_SITE
-    }
-
-    const { site } = state
-    let experimentName = DEFAULT_NAME
-
-    // If the "select" field is present in the model, it is observed
-    if (defined(selectProp)) {
-      selectedExperiment = selectSpecific(selectProp!)
-    } else if (defined(state.site.select)) {
-      selectedExperiment = selectSpecific(state.site.select!)
-    } else if (!selectedExperiment) {
-      selectedExperiment = selectFallbackFor(DEFAULT_NAME)
-    }
-
-    state.experiment = selectedExperiment
-    state.state = LoadState.READY
-
-    console.info(`[IB] Bandit selects experiment "${state.experiment?.name}"`, state.experiment)
-  }
-
-  // No matching experiment? Use the fallback
-  function selectFallbackFor(desiredExperiment: string) {
-    console.warn(`[IB] Could not find experiment '${desiredExperiment}'. Falling back to '${DEFAULT_NAME}'`)
-    let fallback = FALLBACK_SITE.experiments[0]
-    if (!fallback) {
-      fallback = {
-        name: DEFAULT_NAME,
-        metrics: {
-          exposures: 0,
-          conversions: 0,
-        },
-      } as Experiment
-    }
-
-    return fallback
-  }
-
-  // Selects a specific experiment by name
-  function selectSpecific(experimentName: string) {
-    console.info(`[IB] Select '${experimentName}'`)
-    const { site } = state
-    return site!.experiments.find(e => e.name === experimentName) ?? null
-  }
-
-  // Initializes the IB and selects an experiment
+  // Initializes the IB and selects a variant
   // TODO: Test error handling - must continue when site config absent
-  function initialize(data?: Site | null, error?: Error | null) {
-    if (defined(data) && (state.state === LoadState.WAIT || state.state === LoadState.PRELOAD)) {
-      console.info(`[IB] Bandit received config`, data, error)
+  async function initialize(site?: Site | null, error?: Error | null) {
 
-      state.site = data!
-      selectExperiment()
+    if (defined(site) && (state.state === LoadState.WAIT || state.state === LoadState.PRELOAD)) {
+      console.info(`[IB] Bandit received config`, site)
 
-      state.state = LoadState.READY
+      const variant = await client.selectVariant(site!, selectProp)
+      state.site = site!
+      state.variant = variant!
       broadcastReadyState()
       return
     }
 
     if (error && state.state === LoadState.WAIT) {
-      console.warn(`[IB] Error fetching config`, error)
-
+      console.warn(`[IB] Error fetching configuration`, error)
       state.error = error
-
-      // We select even if a server is not available at the moment
       state.site = FALLBACK_SITE
-      selectExperiment()
+      state.variant = await client.selectVariant(site!, selectProp)
 
       try {
         if (props.onError) {
@@ -180,7 +112,7 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
   }
 
   // Kick-off the initialization process
-  if (state.state === LoadState.PRELOAD) {
+  if (state.state === LoadState.PRELOAD && !siteProp) {
     state.state = LoadState.WAIT
 
     // If we have a model from props, use that definition, including any metrics baked
@@ -192,29 +124,22 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
     console.info(`[IB] [Server render]`)
   }
 
+  // Dispatching the initial "ready" state update during a layout effect means
+  // the state change happens *synchronously* and before the next paint.
+  // This helps reduce the visual flicker when sites are loading in async
+  useIsomorphicLayoutEffect(() => {
+    if (ready) {
+      setBanditState(state)
+    }
+  }, [ready])
+
+
   return (
     <InstantBanditContext.Provider value={state}>
       {props.children}
     </InstantBanditContext.Provider>
   )
 }
-
-// If a site model can't be loaded remotely and none was supplied locally,
-// this model is used as the fallback, specifying only the invariant
-export const FALLBACK_SITE: Site = {
-  name: DEFAULT_SITE_NAME,
-  select: DEFAULT_NAME,
-  experiments: [
-    {
-      name: DEFAULT_NAME,
-      metrics: {
-        exposures: 0,
-        clicks: 0,
-      }
-    }
-  ]
-} as const
-Object.freeze(FALLBACK_SITE)
 
 function createNewBanditState(props: InstantBanditProps): InstantBanditState {
   const state = Object.assign({}, DEFAULT_CONTEXT_STATE)

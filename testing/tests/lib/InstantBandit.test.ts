@@ -1,4 +1,4 @@
-import fetchMock from "jest-fetch-mock/types"
+import fetchMock from "jest-fetch-mock"
 import { bandit, conversionRates, maxKey, otherProbabilities } from "../../../lib/bandit"
 
 

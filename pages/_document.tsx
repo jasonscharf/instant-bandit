@@ -1,4 +1,5 @@
 import { Html, Head, Main, NextScript } from "next/document"
+import { Mark } from "../components/Mark"
 import { DEFAULT_BASE_URL, DEFAULT_SITE_PATH } from "../lib/constants"
 
 
@@ -11,10 +12,10 @@ export default function Document() {
       <Head>
         <link rel="preload" href={`${DEFAULT_BASE_URL}/${DEFAULT_SITE_PATH}`} as="fetch" crossOrigin="anonymous" />
       </Head>
-      <body>
-        <Main />
-        <NextScript />
-      </body>
+        <body>
+          <Main />
+          <NextScript />
+        </body>
     </Html>
   )
 }

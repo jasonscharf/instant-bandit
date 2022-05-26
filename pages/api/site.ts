@@ -15,6 +15,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     "Origin, X-Requested-With, Content-Type, Accept, Authorization",
   )
 
+  // TODO: Caching headers. Have the client help out with that
+  // Cache-Control: no-cache
+
   const client = new InstantBanditClient()
   const site = await client.select(DEMO_SITE)
   res.status(200).json(site)

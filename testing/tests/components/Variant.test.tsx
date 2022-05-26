@@ -6,18 +6,18 @@ import React from "react"
 import fetchMock, { FetchMock } from "jest-fetch-mock"
 
 import { Debug } from "../../../components/InstantBanditDebug"
-import { Experiment } from "../../../components/Experiment"
 import { InstantBandit } from "../../../components/InstantBandit"
 import { LoadState } from "../../../lib/contexts"
-import { disableJestLogging, renderTest } from "../../test-utils"
+import { Variant } from "../../../components/Variant"
+import { renderTest } from "../../test-utils"
+import { screen, } from "@testing-library/react"
 import { TEST_SITE_AB } from "../../configs"
-import { screen, waitFor } from "@testing-library/react"
 
 
 declare const fetch: Promise<Response> & FetchMock
 
 
-describe("Experiment", () => {
+describe("Variant", () => {
   beforeAll(() => {
     fetchMock.enableMocks()
   })
@@ -49,12 +49,12 @@ describe("Experiment", () => {
               expect(bandit.state).toStrictEqual(LoadState.WAIT)
             }} />
 
-            <Experiment name="A">
+            <Variant name="A">
               <span data-testid={invisible}>invisible</span>
               <Debug onFirstEffect={({ bandit }) => {
                 throw new Error("This element should not be presented")
               }} />
-            </Experiment>
+            </Variant>
 
           </InstantBandit>
         )
@@ -62,7 +62,7 @@ describe("Experiment", () => {
         const [vis] = await component.findAllByTestId(visible)
         expect(vis).toBeVisible()
 
-        const invis = screen.queryByTestId(invisible);
+        const invis = screen.queryByTestId(invisible)
         expect(invis).toBeNull()
       })
 
@@ -73,13 +73,13 @@ describe("Experiment", () => {
         const component = await renderTest(
           <InstantBandit select="B">
 
-            <Experiment name="A" default>
+            <Variant name="A" default>
               <Debug onFirstEffect={({ bandit }) => {
                 expect(bandit.state).toStrictEqual(LoadState.WAIT)
                 presented = true
               }} />
 
-            </Experiment>
+            </Variant>
           </InstantBandit>
         )
 

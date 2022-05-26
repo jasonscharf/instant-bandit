@@ -36,15 +36,12 @@ const InstantBanditDebug = (props: React.PropsWithChildren<DebugProps> = {}) => 
   const scopeCtx = useContext(ScopeContext)
 
   const { children, label, msg: log, onEffect, onFirstEffect, testId } = props
-  const { experiment } = scopeCtx
+  const { variant } = scopeCtx
 
   const banditCtxStr = JSON.stringify(banditCtx)
   const scopeCtxStr = JSON.stringify(scopeCtx)
 
   useEffect(() => {
-
-    console.info(`[IB] dbg ${label} ${experiment} debug effect ${state.effects + 1}`)
-
     if (onFirstEffect && state.effects === 1) {
       onFirstEffect({ debug: state, bandit: banditCtx, scope: scopeCtx })
     }
@@ -54,19 +51,19 @@ const InstantBanditDebug = (props: React.PropsWithChildren<DebugProps> = {}) => 
     }
 
     if (defined(log)) {
-      console.info(`[IB] dbg '${log}'`)
+      console.debug(`[IB] debug :: '${log}'`)
     }
 
     ++state.effects
     setState(state)
-  }, [banditCtx.state])
+  }, [])
 
   return (
     <>
       {children}
       <div style={hiddenStyle} data-test-id={testId}>
         <span data-testid="ib-debug-label">{label}</span>
-        <span data-testid="ib-debug-experiment">{experiment}</span>
+        <span data-testid="ib-debug-variant">{variant}</span>
         <span data-testid="ib-debug-state">{banditCtxStr}</span>
         <span data-testid="ib-debug-scope">{scopeCtxStr}</span>
         <span data-testid="ib-debug-stats-effects">{state.effects}</span>

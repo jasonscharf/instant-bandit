@@ -1,40 +1,36 @@
-import { CSSProperties, PropsWithChildren, useContext, useState } from "react"
-import { DEFAULT_SCOPE_CONTEXT, InstantBanditContext, LoadState, Scope, ScopeContext } from "../lib/contexts"
+import { PropsWithChildren, useContext } from "react"
+import { InstantBanditContext, LoadState } from "../lib/contexts"
 
 
 export interface PlaceholderComponentProps {
 
-  /** If `true`, shows the placeholder content rather than setting 0 opacity */
+  /** If `true`, shows the placeholder content at all times. */
   show?: boolean
 }
 
 /**
- * Represents a specific variation of a component or tree of components
+ * Represents a specific variation of a component or tree of components.
+ * Setting the property `show` keeps the placeholder present at all times.
  * @param props 
  * @returns 
  */
 export function Placeholder(props: PropsWithChildren<PlaceholderComponentProps>) {
   const { show } = props
-  const { state: banditState } = useContext(InstantBanditContext)
 
-  const banditReady = banditState === LoadState.READY
+  const { variant, siteName, state: banditState } = useContext(InstantBanditContext)
 
-  if (banditReady) {
-    return null
+  const isDefault = true
+  const isSelected = false
+  const notReady = banditState !== LoadState.READY
+
+  function shouldBePresent() {
+    return isSelected || (isDefault && notReady)
   }
 
+  const present = shouldBePresent()
   return (
-    <div style={show ? styleVisible : styleHidden}>
-      {props.children}
-    </div>
+    <>
+      {present && props.children}
+    </>
   )
 }
-
-export const styleVisible: CSSProperties = {
-  opacity: 1,
-}
-
-export const styleHidden: CSSProperties = {
-  opacity: 0,
-}
-

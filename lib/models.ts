@@ -1,5 +1,7 @@
-
-export interface Experiment {
+/**
+ * A particular variation of a site/app
+ */
+export interface Variant {
   name: string
   metrics?: MetricsBucket
 }
@@ -7,7 +9,7 @@ export interface Experiment {
 /**
  * Metadata about a particular variant
  */
-export interface ExperimentMeta extends Experiment {
+export interface VariantMeta extends Variant {
   desc?: string
   metrics: MetricsBucket
 }
@@ -19,7 +21,7 @@ export interface Site {
   name: string
   select?: string | null
   session?: string | null
-  experiments: readonly Experiment[]
+  variants: readonly Variant[]
 }
 
 /**
@@ -27,7 +29,7 @@ export interface Site {
  */
 export interface SiteMeta extends Site {
   origin: string
-  experiments: readonly ExperimentMeta[]
+  variants: readonly VariantMeta[]
 }
 
 /**

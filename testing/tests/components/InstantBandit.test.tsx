@@ -73,7 +73,7 @@ describe("InstantBandit component", () => {
       expect(calls).toStrictEqual(1)
     })
 
-    it("invokes a fetch for the experiments", async () => {
+    it("invokes a fetch for the variants", async () => {
       let calls = 0
       fetch.mockResponseOnce(async (init) => {
         ++calls
@@ -116,7 +116,7 @@ describe("InstantBandit component", () => {
       // TODO: TEST
     })
 
-    it("falls back to the site 'select field' experiment if the 'force' option is invalid", async () => {
+    it("falls back to the site 'select field' variant if the 'force' option is invalid", async () => {
       // TODO: TEST
     })
   })
@@ -145,23 +145,23 @@ describe("InstantBandit component", () => {
       expect(error instanceof Error).toBe(true)
       expect(banditState.error).toStrictEqual(error)
       expect(defined(banditState)).toBe(true)
-      expect(defined(banditState.experiment)).toBe(true)
-      expect(banditState.experiment?.name.length).toBeGreaterThan(0)
+      expect(defined(banditState.variant)).toBe(true)
+      expect(banditState.variant?.name.length).toBeGreaterThan(0)
     })
 
-    it("falls back to a self-selection if the 'select field' experiment if the 'force' option is invalid", async () => {
+    it("falls back to a self-selection if the 'select field' variant if the 'force' option is invalid", async () => {
       // TODO: TEST
     })
 
-    it("selects the experiment specified in the model if the select field is populated", async () => {
+    it("selects the variant specified in the model if the select field is populated", async () => {
       // TODO: TEST
     })
 
-    it("selects a variant specified in the model if the select field doesn't match an experiment", async () => {
+    it("selects a variant specified in the model if the select field doesn't match an variant", async () => {
       // TODO: TEST
     })
 
-    it("selects the indicated experiment even if its probability is 0", async () => {
+    it("selects the indicated variant even if its probability is 0", async () => {
       // TODO: TEST
     })
 
@@ -178,38 +178,38 @@ describe("InstantBandit component", () => {
     })
   })
 
-  describe("JSX experiment declarations", () => {
-    it("warns when an unknown experiment registers", async () => {
+  describe("JSX variant declarations", () => {
+    it("warns when an unknown variant registers", async () => {
       // TODO: TEST
     })
   })
 
   describe("metrics", () => {
-    it("pushes metrics to the server when an experiment is presented", async () => {
+    it("pushes metrics to the server when an variant is presented", async () => {
       // TODO: TEST
     })
   })
 
   describe("scope", () => {
-    it("provides the experiment to children via context", async () => {
+    it("provides the variant to children via context", async () => {
       fetch.mockResponseOnce(async () => {
         return JSON.stringify(TEST_SITE_AB)
       })
 
-      let gotExperiment = false
+      let gotVariant = false
       const component = await renderTest(
         <InstantBandit>
           <Debug onEffect={({ bandit }) => {
-            if (!defined(bandit.experiment)) return
+            if (!defined(bandit.variant)) return
 
-            gotExperiment = true
-            expect(defined(bandit.experiment)).toBe(true)
-            expect(bandit.experiment!.name.length).toBeGreaterThan(0)
+            gotVariant = true
+            expect(defined(bandit.variant)).toBe(true)
+            expect(bandit.variant!.name.length).toBeGreaterThan(0)
           }} />
         </InstantBandit>
       )
 
-      expect(gotExperiment).toBe(true)
+      expect(gotVariant).toBe(true)
     })
   })
 })

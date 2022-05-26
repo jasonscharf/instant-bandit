@@ -1,5 +1,5 @@
 import { InstantBanditState } from "./contexts"
-import { Experiment, Site } from "./models"
+import { Site } from "./models"
 
 export type Variant = string
 export type Probability = number
@@ -13,7 +13,7 @@ export type ProbabilityDistribution = Record<Variant, Probability>
 export interface InstantBanditProps {
   preserveSession?: boolean
   probabilities?: ProbabilityDistribution
-  experiments?: string[]
+  variants?: string[]
   select?: string
   site?: Site
   block?: boolean
@@ -26,15 +26,15 @@ export interface InstantBanditProps {
 }
 
 export interface AlgorithmImpl<TAlgoArgs, TMetadata = unknown> {
-  select(args: SelectionArgs): Promise<{ selection: Experiment, meta?: TMetadata }>
+  select(args: SelectionArgs): Promise<{ selection: Variant, meta?: TMetadata }>
 }
 
 export type SelectionArgs = {
   algo: Algorithm | string
-  variants: Experiment[]
+  variants: Variant[]
 }
 
-export type SelectionDelegate = (args: SelectionArgs) => Promise<Experiment>
+export type SelectionDelegate = (args: SelectionArgs) => Promise<Variant>
 
 export type ConversionOptions = {
   experimentIds?: string[] // whitelist of experiments to associate with the conversion
@@ -63,5 +63,9 @@ export enum Algorithm {
   EPSILON_GREEDY = "epsilon-greedy-mab",
 }
 
-export type AlgorithmFactory = () => Experiment
+export type AlgorithmFactory = () => Variant
 export type AlgorithmBlock = Record<string, AlgorithmFactory>
+
+
+// Node and DOM typings differ
+export type TimerLike = any

@@ -1,5 +1,5 @@
 import React from "react"
-import { Experiment, Site } from "./models"
+import { Variant, Site } from "./models"
 import { InstantBanditClient } from "./InstantBandit"
 import { DEFAULT_SITE_NAME } from "./constants"
 
@@ -13,7 +13,7 @@ export enum LoadState {
 
 export interface Scope {
   siteName: string
-  experiment: Experiment | null
+  variant: Variant | null
 }
 
 const globalClient = new InstantBanditClient()
@@ -25,7 +25,7 @@ export interface InstantBanditState extends Scope {
   error: Error | null
   site: Site | null
   siteName: string
-  experiment: Experiment | null
+  variant: Variant | null
 }
 
 export const DEFAULT_CONTEXT_STATE: InstantBanditState = {
@@ -33,7 +33,7 @@ export const DEFAULT_CONTEXT_STATE: InstantBanditState = {
   error: null,
   site: null,
   siteName: DEFAULT_SITE_NAME,
-  experiment: null,
+  variant: null,
 }
 Object.freeze(DEFAULT_CONTEXT_STATE)
 
@@ -43,7 +43,7 @@ export const InstantBanditContext: React.Context<InstantBanditState> =
 
 export const DEFAULT_SCOPE_CONTEXT: Scope = {
   siteName: DEFAULT_SITE_NAME,
-  experiment: null,
+  variant: null,
 }
 
 export const ScopeContext = React.createContext<Scope>(DEFAULT_SCOPE_CONTEXT)

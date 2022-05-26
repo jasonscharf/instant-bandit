@@ -1,11 +1,11 @@
 import Head from "next/head"
 
-import { Experiment } from "../components/Experiment"
+import { Variant } from "../components/Variant"
 import { InstantBandit } from "../components/InstantBandit"
+import { Placeholder } from "../components/Placeholder"
+import NoSSR from "../components/NoSSR"
 
 import styles from "../styles/Home.module.css"
-import NoSSR from "../components/NoSSR"
-import { Placeholder } from "../components/Placeholder"
 
 
 export default function ClientSideRendering() {
@@ -32,20 +32,19 @@ export default function ClientSideRendering() {
             </p>
             <>
               <div className={styles.example}>
-
                 <Placeholder>
-                  <h1>Invisible placeholder element to preserve layout</h1>
+                  <h1 style={{ opacity: 0 }}>Invisible placeholder element to preserve layout</h1>
                 </Placeholder>
 
-                <Experiment name="A">
-                  <h1 style={{ background: "red" }}>Welcome! You are currently viewing experiment A</h1>
-                </Experiment>
-                <Experiment name="B">
-                  <h1 style={{ background: "green" }}>Welcome! You are currently viewing experiment B</h1>
-                </Experiment>
-                <Experiment name="C">
-                  <h1 style={{ background: "blue" }}>Welcome! You are currently viewing experiment C</h1>
-                </Experiment>
+                <Variant name="A">
+                  <h1 style={{ background: "red" }}>Welcome! You are currently viewing variant A</h1>
+                </Variant>
+                <Variant name="B">
+                  <h1 style={{ background: "green" }}>Welcome! You are currently viewing variant B</h1>
+                </Variant>
+                <Variant name="C">
+                  <h1 style={{ background: "blue" }}>Welcome! You are currently viewing variant C</h1>
+                </Variant>
               </div>
             </>
           </main>

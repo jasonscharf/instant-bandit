@@ -5,19 +5,19 @@ import * as constants from "../../lib/constants"
 // TODO: Decouple from Next
 
 /**
- * Returns the site ID and experiment ID for a given request, using the request cookies.
- * If a site ID is not provided, one will be derived from the domain name and added to the store.
- * If an experiment ID is not provided, the default experiment ID will be used.
+ * Returns the site and variant for a given request, using the request cookies.
+ * If a site is not provided, one will be derived from the domain name and added to the store.
+ * If a variant is not provided, the default variant will be used.
  * @param req 
  */
-export async function getSiteAndExperiment(req: NextApiRequest, throws = false) {
-  let siteId = req.cookies[constants.COOKIE_SITE_ID]
+export async function getSiteAndVariant(req: NextApiRequest, throws = false) {
+  const site = req.cookies[constants.COOKIE_SITE_ID]
 
   // TODO: Make dev-only
-  let experimentId = req.query.experimentId as string ?? req.cookies[constants.COOKIE_EXPERIMENT_ID]
+  const variant = req.query.variant as string ?? req.cookies[constants.COOKIE_VARIANT_ID]
 
   return [
-    siteId,
-    experimentId,
+    site,
+    variant,
   ]
 }

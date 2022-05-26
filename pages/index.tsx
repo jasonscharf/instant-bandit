@@ -2,7 +2,7 @@ import { GetServerSideProps } from "next"
 import Head from "next/head"
 
 import { DemoComponent, demoExperimentId } from "../components/DemoComponent"
-import { Experiment } from "../components/Experiment"
+import { Variant } from "../components/Variant"
 import { InstantBandit } from "../components/InstantBandit"
 import { DEMO_SITE } from "../lib/examples"
 import { InstantBanditClient } from "../lib/InstantBandit"
@@ -31,22 +31,22 @@ export default function Home(serverSideProps: InstantBanditProps) {
 
         <div className={styles.example}>
           <InstantBandit {...serverSideProps}>
-            <Experiment default>
+            <Variant default>
               <h1 style={{ opacity: 0.0 }}>
                 This is a placeholder content.
                 Normally it would not have content it.
                 Placeholders are intended to fill space, preserving layout and preventing CLS.
               </h1>
-            </Experiment>
-            <Experiment name="A">
+            </Variant>
+            <Variant name="A">
               <h1 style={{ background: "red" }}>Welcome! You are currently viewing variant A</h1>
-            </Experiment>
-            <Experiment name="B">
+            </Variant>
+            <Variant name="B">
               <h1 style={{ background: "green" }}>Welcome! You are currently viewing variant B</h1>
-            </Experiment>
-            <Experiment name="C">
+            </Variant>
+            <Variant name="C">
               <h1 style={{ background: "blue" }}>Welcome! You are currently viewing variant C</h1>
-            </Experiment>
+            </Variant>
           </InstantBandit>
         </div>
 
