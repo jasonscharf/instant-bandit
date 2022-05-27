@@ -1,3 +1,5 @@
+import { AlgorithmImpl, AlgorithmResults, SelectionArgs } from "../types"
+
 export interface MultiArmedBanditArgs {
   epsilon: number
 }
@@ -9,11 +11,21 @@ export const DEFAULT_MAB_ARGS: MultiArmedBanditArgs = {
 }
 
 /**
- * Implementation of an Epislon-greedy multi-armed-bandit algorithm
- * @param args 
+ * Implementation of an Epsilon-greedy multi-armed-bandit algorithm
  */
-export function EpsilonGreedyAlgo(args: Partial<MultiArmedBanditArgs> = DEFAULT_MAB_ARGS) {
-  const appliedArgs = Object.assign({}, args)
-  const { epsilon } = appliedArgs
 
+export class EpsilonGreedyBanditAlgo implements AlgorithmImpl<MultiArmedBanditArgs> {
+  async select(args: SelectionArgs) {
+    const { site } = args
+    const { variants } = site
+
+    // STUB
+
+    const results: AlgorithmResults = {
+      winner: variants[0],
+      metrics: {},
+      pValue: 0,
+    }
+    return results
+  }
 }

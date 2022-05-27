@@ -1,4 +1,5 @@
 import { act, render, RenderResult } from "@testing-library/react"
+import { TEST_SITE_AB } from "./configs"
 
 
 /**
@@ -10,6 +11,16 @@ export async function renderTest(tree: React.ReactElement): Promise<RenderResult
   let rendered
   await act(async () => { rendered = await render(tree) })
   return rendered
+}
+
+
+// Common mock responses 
+export function siteLoadResponse(site = TEST_SITE_AB) {
+  return (req: Request) => Promise.resolve(JSON.stringify(site))
+}
+
+export function siteErrorResponse(errorText = "MOCK-ERROR") {
+  return (req: Request) => Promise.reject(new Error(errorText))
 }
 
 /**

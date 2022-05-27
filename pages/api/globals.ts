@@ -2,8 +2,6 @@ import { NextApiRequest } from "next"
 import * as constants from "../../lib/constants"
 
 
-// TODO: Decouple from Next
-
 /**
  * Returns the site and variant for a given request, using the request cookies.
  * If a site is not provided, one will be derived from the domain name and added to the store.
@@ -11,10 +9,8 @@ import * as constants from "../../lib/constants"
  * @param req 
  */
 export async function getSiteAndVariant(req: NextApiRequest, throws = false) {
-  const site = req.cookies[constants.COOKIE_SITE_ID]
-
-  // TODO: Make dev-only
-  const variant = req.query.variant as string ?? req.cookies[constants.COOKIE_VARIANT_ID]
+  const site = req.query.site as string
+  const variant = req.query.variant as string
 
   return [
     site,

@@ -1,5 +1,6 @@
 import { InstantBanditState } from "./contexts"
-import { Site } from "./models"
+import { MetricsBucket, Site, Variant as VariantModel } from "./models"
+
 
 export type Variant = string
 export type Probability = number
@@ -19,19 +20,17 @@ export interface InstantBanditProps {
   block?: boolean
   fetcher?: (...args: any[]) => any
   debug?: boolean
-
-  // TODO: Remove or hide there. They are really just used for testing async behaviour
   onReady?: (state: InstantBanditState) => void
   onError?: (err: Error | null, state: InstantBanditState | null) => void
 }
 
-export interface AlgorithmImpl<TAlgoArgs, TMetadata = unknown> {
-  select(args: SelectionArgs): Promise<{ selection: Variant, meta?: TMetadata }>
+export interface AlgorithmImpl<TAlgoArgs = unknown, TMetadata = unknown> {
+  select<TAlgoArgs>(args: TAlgoArgs & SelectionArgs): Promise<AlgorithmResults>
 }
 
 export type SelectionArgs = {
   algo: Algorithm | string
-  variants: Variant[]
+  site: Site
 }
 
 export type SelectionDelegate = (args: SelectionArgs) => Promise<Variant>
@@ -54,18 +53,42 @@ export type ProbabilitiesResponse = {
 // p-value of difference between variants
 export type PValue = number
 
+
+export enum LoadState {
+  PRELOAD = "pre",
+  WAIT = "wait-for-data",
+  SELECTING = "selecting",
+  READY = "ready",
+}
+
 /**
  * Algorithms to use when selecting a variant.
- * See the README for an overview.
  */
 export enum Algorithm {
   RANDOM = "random",
-  EPSILON_GREEDY = "epsilon-greedy-mab",
+  MAB_EPSILON_GREEDY = "mab-epsilon-greedy",
 }
 
-export type AlgorithmFactory = () => Variant
-export type AlgorithmBlock = Record<string, AlgorithmFactory>
+export type AlgorithmFactory = () => AlgorithmImpl
+export type Algorithms = Record<string, AlgorithmFactory>
+export interface AlgorithmResults {
+  pValue: number
+  metrics: MetricsBucket
+  winner: VariantModel
+}
 
+
+/**
+ * Describes a serializable descriptor for a user session.
+ * Serializable into local storage facilities.
+ */
+export interface SessionDescriptor {
+  origin: string
+  sid: string
+  uid: string
+  site: string | null
+  variant: Variant | null
+}
 
 // Node and DOM typings differ
 export type TimerLike = any

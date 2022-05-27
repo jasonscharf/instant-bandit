@@ -1,15 +1,10 @@
 import React from "react"
-import { Variant, Site } from "./models"
+
 import { InstantBanditClient } from "./InstantBandit"
+import { LoadState } from "./types"
+import { Variant, Site } from "./models"
 import { DEFAULT_SITE_NAME } from "./constants"
 
-
-export enum LoadState {
-  PRELOAD = "pre",
-  WAIT = "wait-for-data",
-  SELECTING = "selecting",
-  READY = "ready",
-}
 
 export interface Scope {
   siteName: string
@@ -22,7 +17,7 @@ export const ClientContext = React.createContext(globalClient)
 
 export interface InstantBanditState extends Scope {
   state: LoadState
-  error: Error | null
+  error?: Error
   site: Site | null
   siteName: string
   variant: Variant | null
@@ -30,7 +25,6 @@ export interface InstantBanditState extends Scope {
 
 export const DEFAULT_CONTEXT_STATE: InstantBanditState = {
   state: LoadState.PRELOAD,
-  error: null,
   site: null,
   siteName: DEFAULT_SITE_NAME,
   variant: null,
