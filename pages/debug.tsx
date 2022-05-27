@@ -37,7 +37,9 @@ export default function Debug(serverSideProps: InstantBanditProps) {
         </div>
 
       </main>
-      <div style={{ height: "500px", width: "100%", background: "orange" }}>DIV</div>
+      <div style={{ height: "500px", width: "100%", background: "orange" }}>
+        
+      </div>
     </InstantBandit>
 
   )

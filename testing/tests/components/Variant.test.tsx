@@ -4,22 +4,25 @@
 import "whatwg-fetch"
 import React from "react"
 import fetchMock, { FetchMock } from "jest-fetch-mock"
+import { screen, } from "@testing-library/react"
 
+import { Call, Catch, ExpectBanditReady, ThrowIfPresented } from "./test-components"
 import { Debug } from "../../../components/InstantBanditDebug"
-import { InstantBandit } from "../../../components/InstantBandit"
-import { LoadState } from "../../../lib/contexts"
+import { InstantBandit } from "../../../components/InstantBanditComponent"
 import { Variant } from "../../../components/Variant"
 import { renderTest } from "../../test-utils"
-import { screen, } from "@testing-library/react"
 import { TEST_SITE_AB } from "../../configs"
 
 
-declare const fetch: Promise<Response> & FetchMock
-
-
 describe("Variant", () => {
+  let count = 0
+  let mounted = false
+
   beforeAll(() => {
     fetchMock.enableMocks()
+    fetch.mockResponses(async (init) => {
+      return await JSON.stringify(TEST_SITE_AB)
+    })
   })
 
   afterAll(() => {
@@ -27,6 +30,8 @@ describe("Variant", () => {
   })
 
   beforeEach(() => {
+    count = 0
+    mounted = false
     sessionStorage.clear()
   })
 
@@ -35,73 +40,71 @@ describe("Variant", () => {
   })
 
   describe("visibility", () => {
-    describe("before selection", () => {
-      it("does not render children", async () => {
-        fetch.mockResponseOnce(async (init) => await JSON.stringify(TEST_SITE_AB))
+    it("only presents children when it is selected", async () => {
+      const invisible = "is-not-rendered"
+      const visible = "is-rendered"
 
-        const visible = "is-rendered"
-        const invisible = "is-not-rendered"
+      const component = await renderTest(
+        <InstantBandit select="B">
+          <Variant name="A">
+            <div data-test-id={invisible} />
+          </Variant>
+          <Variant name="B">
+            <div data-test-id={visible} />
+          </Variant>
+        </InstantBandit>
+      )
 
-        const component = await renderTest(
+      // TODO: Finish
+    })
+
+    it("hides itself when the variant isn't selected", async () => {
+      let countA = 0
+      let countB = 0
+      let countC = 0
+
+      const component = await renderTest(
+        <Catch>
           <InstantBandit select="B">
-            <span data-testid={visible}>visible</span>
-            <Debug onFirstEffect={({ bandit }) => {
-              expect(bandit.state).toStrictEqual(LoadState.WAIT)
-            }} />
 
             <Variant name="A">
-              <span data-testid={invisible}>invisible</span>
-              <Debug onFirstEffect={({ bandit }) => {
-                throw new Error("This element should not be presented")
-              }} />
+              <Debug onFirstRender={() => ++countA} />
+            </Variant>
+
+            <Variant name="B">
+              <Debug onFirstRender={() => ++countB} />
+            </Variant>
+
+            <Variant name="C">
+              <Debug onFirstRender={() => ++countC} />
             </Variant>
 
           </InstantBandit>
-        )
+        </Catch>
+      )
 
-        const [vis] = await component.findAllByTestId(visible)
-        expect(vis).toBeVisible()
+      expect(countA).toBe(0)
+      expect(countB).toBe(1)
+      expect(countC).toBe(0)
+    })
 
-        const invis = screen.queryByTestId(invisible)
-        expect(invis).toBeNull()
-      })
+    it("does not present if unnamed and a variant is selected", async () => {
+      let count = 0
+      const component = await renderTest(
+        <InstantBandit select="B">
+          <Variant><Debug onFirstEffect={() => ++count} /></Variant>
+          <Variant><Debug onFirstEffect={() => ++count} /></Variant>
+          <Variant><Debug onFirstEffect={() => ++count} /></Variant>
+        </InstantBandit>
+      )
 
-      it("does render children if instructed to", async () => {
-        fetch.mockResponseOnce(async (init) => await JSON.stringify(TEST_SITE_AB))
+      expect(count).toBe(0)
+    })
 
-        let presented = false
-        const component = await renderTest(
-          <InstantBandit select="B">
+    it("has the correct scope", async () => {
 
-            <Variant name="A" default>
-              <Debug onFirstEffect={({ bandit }) => {
-                expect(bandit.state).toStrictEqual(LoadState.WAIT)
-                presented = true
-              }} />
-
-            </Variant>
-          </InstantBandit>
-        )
-
-        expect(presented).toBe(true)
-      })
     })
   })
-
-  // TODO: Placeholders, invariants
-  /*
- <InstantBandit {...serverSideProps}>
-  <Placeholder>
-    <div>
-      This block will be rendered during loading.
-      Placeholders hold layout in place while variants are loaded, preventing CLS
-    </div>
-  </Placeholder
-
-  <Invariant>
-    This is shown when there no variant has been loaded
-  </Invariant>
-  */
 
   describe("suspense", () => {
     it("suspends its children while it's unselected", async () => {
@@ -142,3 +145,5 @@ describe("Variant", () => {
     })
   })
 })
+
+declare const fetch: Promise<Response> & FetchMock

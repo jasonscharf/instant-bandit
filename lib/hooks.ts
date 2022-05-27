@@ -12,7 +12,6 @@ export function useBandit(): InstantBanditState & Scope {
 
   return {
     state,
-    error: null,
     site,
     siteName,
     variant,

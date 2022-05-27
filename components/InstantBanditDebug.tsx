@@ -28,6 +28,7 @@ export interface DebugProps {
   msg?: string
   onEffect?: (props: DebugCallbackProps) => any
   onFirstEffect?: (props: DebugCallbackProps) => any
+  onFirstRender?: (props: DebugCallbackProps) => any
 }
 
 const InstantBanditDebug = (props: React.PropsWithChildren<DebugProps> = {}) => {
@@ -35,19 +36,23 @@ const InstantBanditDebug = (props: React.PropsWithChildren<DebugProps> = {}) => 
   const banditCtx = useContext(InstantBanditContext)
   const scopeCtx = useContext(ScopeContext)
 
-  const { children, label, msg: log, onEffect, onFirstEffect, testId } = props
+  const { children, label, msg: log, onEffect, onFirstEffect, onFirstRender, testId } = props
+  const { state: loadState } = banditCtx
   const { variant } = scopeCtx
 
   const banditCtxStr = JSON.stringify(banditCtx)
   const scopeCtxStr = JSON.stringify(scopeCtx)
+  
+  const info = { debug: state, bandit: banditCtx, scope: scopeCtx }
 
   useEffect(() => {
-    if (onFirstEffect && state.effects === 1) {
-      onFirstEffect({ debug: state, bandit: banditCtx, scope: scopeCtx })
+
+    if (state.effects === 0 && onFirstEffect) {
+      onFirstEffect(info)
     }
 
     if (onEffect) {
-      onEffect({ debug: state, bandit: banditCtx, scope: scopeCtx })
+      onEffect(info)
     }
 
     if (defined(log)) {
@@ -56,14 +61,19 @@ const InstantBanditDebug = (props: React.PropsWithChildren<DebugProps> = {}) => 
 
     ++state.effects
     setState(state)
-  }, [])
+  }, [loadState, state, variant, banditCtx, scopeCtx])
 
-  return (
+  if (state.renders === 0 && onFirstRender) {
+    onFirstRender(info)
+  }
+
+  ++state.renders
+return (
     <>
       {children}
       <div style={hiddenStyle} data-test-id={testId}>
         <span data-testid="ib-debug-label">{label}</span>
-        <span data-testid="ib-debug-variant">{variant}</span>
+        <span data-testid="ib-debug-variant">{variant?.name}</span>
         <span data-testid="ib-debug-state">{banditCtxStr}</span>
         <span data-testid="ib-debug-scope">{scopeCtxStr}</span>
         <span data-testid="ib-debug-stats-effects">{state.effects}</span>

@@ -1,5 +1,6 @@
 import { PropsWithChildren, useContext } from "react"
-import { InstantBanditContext, LoadState } from "../lib/contexts"
+import { InstantBanditContext } from "../lib/contexts"
+import { LoadState } from "../lib/types"
 
 
 export interface PlaceholderComponentProps {
@@ -16,8 +17,7 @@ export interface PlaceholderComponentProps {
  */
 export function Placeholder(props: PropsWithChildren<PlaceholderComponentProps>) {
   const { show } = props
-
-  const { variant, siteName, state: banditState } = useContext(InstantBanditContext)
+  const { state: banditState } = useContext(InstantBanditContext)
 
   const isDefault = true
   const isSelected = false

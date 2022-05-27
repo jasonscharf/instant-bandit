@@ -1,7 +1,7 @@
 import { PropsWithChildren, Suspense, useContext, useEffect, useState } from "react"
 
-import { InstantBanditProps } from "../lib/types"
-import { ClientContext, DEFAULT_CONTEXT_STATE, InstantBanditContext, LoadState, InstantBanditState } from "../lib/contexts"
+import { InstantBanditProps, LoadState } from "../lib/types"
+import { ClientContext, DEFAULT_CONTEXT_STATE, InstantBanditContext, InstantBanditState } from "../lib/contexts"
 import { Site } from "../lib/models"
 import { defined, useIsomorphicLayoutEffect } from "../lib/utils"
 import { FALLBACK_SITE } from "../lib/InstantBandit"
@@ -10,6 +10,7 @@ import { FALLBACK_SITE } from "../lib/InstantBandit"
 // TODO: Forward declarations of variants
 // TODO: Check variants
 // TODO: Separate out internal state tracking / contexts
+// TODO: Throw if passed a site object that doesn't match the name prop
 
 export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
   const [state, setBanditState] = useState(createNewBanditState(props))
@@ -33,21 +34,21 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
     initialize(siteProp)
   }
 
-  useEffect(() => {
-    console.log(`[IB] UseEffect`)
-  }, [state])
-
   // Fetches the variants, selects a variant, and initializes the component
   async function load() {
     try {
 
-      // TODO: NOTE: This is required for hydration sync. It is unclear why.
+      // TODO: Look into why this is/was required for hydration sync
       await Promise.resolve()
 
-      console.info(`[IB] Fetching site data...`)
       const site = await client.load()
-
       initialize(site)
+
+      // Client doesn't throw, so we check the error after the fact
+      if (client.error) {
+        console.warn(`[IB] Error fetching site data: ${client.error}`)
+      }
+
     } catch (err) {
       console.warn(`[IB] Error fetching site data: ${err}`)
       initialize(null, err)
@@ -67,8 +68,6 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
     setReady(true)
     setBanditState({ ...state })
 
-    console.info(`[IB] Bandit ready`, state)
-
     if (props.onReady) {
       try {
         props.onReady(state)
@@ -79,24 +78,28 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
   }
 
   // Initializes the IB and selects a variant
-  // TODO: Test error handling - must continue when site config absent
-  async function initialize(site?: Site | null, error?: Error | null) {
+  async function initialize(site?: Site | null, error?: Error) {
+
+    await client.init(site!, selectProp)
+    const variant = client.variant
+    state.error = error!
+    state.site = FALLBACK_SITE
+    state.siteName = site!.name
+    state.variant = variant!
 
     if (defined(site) && (state.state === LoadState.WAIT || state.state === LoadState.PRELOAD)) {
-      console.info(`[IB] Bandit received config`, site)
-
-      const variant = await client.selectVariant(site!, selectProp)
+      await client.init(site!, selectProp)
+      const variant = client.variant
       state.site = site!
+      state.siteName = site!.name
       state.variant = variant!
+
       broadcastReadyState()
       return
     }
 
     if (error && state.state === LoadState.WAIT) {
-      console.warn(`[IB] Error fetching configuration`, error)
-      state.error = error
-      state.site = FALLBACK_SITE
-      state.variant = await client.selectVariant(state.site!, selectProp)
+
 
       try {
         if (props.onError) {
@@ -124,19 +127,18 @@ export const InstantBandit = (props: PropsWithChildren<InstantBanditProps>) => {
     console.info(`[IB] [Server render]`)
   }
 
-  // Dispatching the initial "ready" state update during a layout effect means
+  // NOTE: Deferring the initial "ready" state update to a layout effect means
   // the state change happens *synchronously* and before the next paint.
-  // This helps reduce the visual flicker when sites are loading in async
+  // This helps reduce the visual flicker upon load.
   useIsomorphicLayoutEffect(() => {
     if (ready) {
       setBanditState(state)
     }
   }, [ready])
 
-
   return (
     <InstantBanditContext.Provider value={state}>
-        {ready && props.children}
+      {ready && props.children}
     </InstantBanditContext.Provider>
   )
 }

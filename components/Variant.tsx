@@ -1,7 +1,8 @@
 import { PropsWithChildren, useContext, useState } from "react"
-import { DEFAULT_VARIANT } from "../lib/constants"
-import { DEFAULT_SCOPE_CONTEXT, InstantBanditContext, LoadState, Scope, ScopeContext } from "../lib/contexts"
 
+import { InstantBanditContext, Scope, ScopeContext, DEFAULT_SCOPE_CONTEXT } from "../lib/contexts"
+import { LoadState } from "../lib/types"
+import { DEFAULT_SITE_NAME, DEFAULT_VARIANT_NAME } from "../lib/constants"
 
 export interface VariantProps {
   name?: string
@@ -19,12 +20,12 @@ export interface VariantProps {
  */
 export function Variant(props: PropsWithChildren<VariantProps>) {
   const { default: invariantProp, name } = props
-  const { variant, siteName, state: banditState } = useContext(InstantBanditContext)
+  const { variant, site, state: banditState } = useContext(InstantBanditContext)
 
   const [scopeState, setScopeState] = useState<Scope>(
     () => Object.assign({}, DEFAULT_SCOPE_CONTEXT, {
       variant,
-      siteName,
+      siteName: site?.name ?? DEFAULT_SITE_NAME,
     } as Scope))
 
   const isInvariant = !!invariantProp
@@ -50,7 +51,7 @@ export interface InvariantProps {
  */
 export const Invariant: React.FC<InvariantProps> = (props) => {
   return (
-    <Variant name={DEFAULT_VARIANT}>
+    <Variant name={DEFAULT_VARIANT_NAME}>
       {props.children}
     </Variant>
   )
